@@ -48,8 +48,8 @@ def classify_image(request):
     if serializer.is_valid():
         image_url = serializer.validated_data['imageURL']
         
-        response = requests.get(image_url)
-        img = Image.open(io.BytesIO(response.content))
+        response_image = requests.get(image_url)
+        img = Image.open(io.BytesIO(response_image.content))
         img = img.resize((32, 32))  
         img = np.array(img) / 255.0
         img = np.expand_dims(img, axis=0)
@@ -60,15 +60,19 @@ def classify_image(request):
         class_idx = np.argmax(score)
         confidence = score[class_idx].numpy()
         response_data =  {"Class": class_names[class_idx], "Accuracy": f"{confidence:.2f}"}
-        return response(
-                status = status.HTTP_200_OK,
-                message = "Created successfully",
-                data = response_data,
+        return Response(
+                status=status.HTTP_200_OK,
+                data={
+                    "message": "Created successfully",
+                    "data": response_data
+                }
             )
 
     else:
-        return response(
-                status = status.HTTP_400_BAD_REQUEST,
-                message = "Validation Error",
-                data = serializer.errors,
+        return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={
+                    "message": "Validation Error",
+                    "data": serializer.errors
+                }
             )
